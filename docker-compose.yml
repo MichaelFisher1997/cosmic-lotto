@@ -5,21 +5,20 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
+      args:
+        - NODE_ENV=production
     ports:
-      - "5173:5173"
+      - "80:3000"  # Map port 80 to the internal port 3000
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       # Update these with your preferred network configuration
       - VITE_NETWORK_ID=1  # Mainnet by default
       - VITE_RPC_URL=https://mainnet.infura.io/v3/YOUR-INFURA-KEY
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    working_dir: /app
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5173"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
       retries: 3
+      start_period: 5s
