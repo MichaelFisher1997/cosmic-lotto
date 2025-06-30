@@ -3,27 +3,28 @@ import { InjectedConnector } from '@web3-react/injected-connector';
 
 // Create a wrapper that matches the expected ExternalProvider interface
 const getEthereumProvider = () => {
-  if (!window.ethereum) {
+  const ethereum = (window as any).ethereum;
+  if (!ethereum) {
     throw new Error('MetaMask is not installed');
   }
   
   return {
-    isMetaMask: window.ethereum.isMetaMask,
+    isMetaMask: ethereum.isMetaMask,
     request: (request: { method: string; params?: any[] }) => 
-      window.ethereum.request(request),
+      ethereum.request(request),
     sendAsync: (request: { method: string; params?: any[] }, callback: (error: any, response: any) => void) => {
-      window.ethereum.request(request)
+      ethereum.request(request)
         .then((result: any) => callback(null, { result }))
         .catch((error: any) => callback(error, null));
     },
     on: (event: string, callback: (...args: any[]) => void) => {
-      window.ethereum.on(event, callback);
+      ethereum.on(event, callback);
     },
     removeListener: (event: string, callback: (...args: any[]) => void) => {
-      window.ethereum.removeListener(event, callback);
+      ethereum.removeListener(event, callback);
     },
-    isConnected: () => window.ethereum.isConnected(),
-    chainId: window.ethereum.chainId
+    isConnected: () => ethereum.isConnected(),
+    chainId: ethereum.chainId
   };
 };
 
@@ -65,10 +66,13 @@ export const getContract = (address: string, abi: any, provider: ethers.provider
 
 // Add network switching utility
 export const switchNetwork = async (chainId: string) => {
-  if (!window.ethereum) return false;
+  const ethereum = (window as any).ethereum;
+  if (!ethereum) {
+    throw new Error('MetaMask is not installed');
+  }
   
   try {
-    await window.ethereum.request({
+    await ethereum.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId }],
     });
