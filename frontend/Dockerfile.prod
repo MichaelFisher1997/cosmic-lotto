@@ -1,6 +1,10 @@
 # Stage 1: Build the application
-# Using the GitHub Container Registry (ghcr.io) as an alternative to Docker Hub
-FROM ghcr.io/nodejs/node:20.15.1-alpine AS builder
+FROM node:20.15.1-alpine AS builder
+
+# Add retry function for package installations
+RUN echo 'function retry() { n=0; until [ "$n" -ge 5 ]; do $@ && break; n=$((n+1)); echo "Retrying...$n"; sleep 5; done; }' >> /root/.profile \
+    && echo 'export -f retry' >> /root/.profile \
+    && source /root/.profile
 
 # Set working directory
 WORKDIR /app
@@ -25,8 +29,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Serve the application using a lightweight server
-# Using the GitHub Container Registry (ghcr.io) as an alternative to Docker Hub
-FROM ghcr.io/nodejs/node:20.15.1-alpine
+FROM node:20.15.1-alpine
 
 # Set working directory
 WORKDIR /app
