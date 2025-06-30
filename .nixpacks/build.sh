@@ -6,8 +6,8 @@ echo "--- Setting up build environment ---"
 # Create app directory if it doesn't exist
 mkdir -p /app/frontend
 
-# Copy all files to the container
-cp -r . /app/
+# Copy only the frontend files
+cp -r frontend/. /app/frontend/
 
 # Navigate to frontend directory
 cd /app/frontend

@@ -18,10 +18,8 @@ NODE_ENV = "production"
 
 [build.dockerfile]
 copy = [
-  "frontend/package*.json",
-  "frontend/tsconfig*.json",
-  "frontend/",
-  "."
+  ".nixpacks/",
+  "frontend/"
 ]
 
 [build.settings]
