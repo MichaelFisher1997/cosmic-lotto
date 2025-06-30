@@ -1,0 +1,38 @@
+[phases.setup]
+nixPkgs = ['nodejs-18_x', 'bun']
+commands = ["echo 'Setup complete'"]
+
+[phases.install]
+cmds = [
+  "cd frontend",
+  "bun install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = [
+  "cd frontend",
+  "bun run build"
+]
+
+[start]
+cmd = "cd frontend && bun run dev -- --host 0.0.0.0 --port $PORT"
+
+[build.args]
+NODE_ENV = { required = false, default = "production" }
+VITE_NETWORK_ID = { required = false, default = "1" }
+VITE_RPC_URL = { required = true }
+
+[build.environment]
+NODE_ENV = "production"
+
+[build.dockerfile]
+copy = [
+  "frontend/package*.json",
+  "frontend/tsconfig*.json",
+  "frontend/",
+  "."
+]
+
+[build.settings]
+memory = 1024
+cpu = 1
