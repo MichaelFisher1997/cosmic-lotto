@@ -27,5 +27,12 @@
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "types": ["vite/client", "node"]
   },
-  "include": ["src", "src/types"]
+  "include": ["src", "src/types"],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/**/__tests__/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

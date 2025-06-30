@@ -1,30 +1,32 @@
+# Base image with Node.js and Bun
 [phases.setup]
-nixPkgs = ['nodejs-18_x', 'bun']
-commands = [
-  "chmod +x /app/.nixpacks/build.sh",
-  "/app/.nixpacks/build.sh"
+nixPkgs = ["nodejs-18_x", "bun"]
+aptPkgs = ["ca-certificates"]
+
+# Install dependencies
+[phases.install]
+cmds = [
+  "cd frontend && bun install",
+  "cd frontend && bun add -d @esbuild-plugins/node-globals-polyfill @esbuild-plugins/node-modules-polyfill rollup-plugin-node-polyfills"
 ]
 
+# Build the application
+[phases.build]
+cmds = ["cd frontend && bunx node static-build.js"]
+
+# Start command (for static hosting, use serve)
 [start]
-cmd = "cd /app/frontend && bun run dev -- --host 0.0.0.0 --port $PORT"
+cmd = "cd frontend && bunx serve -s dist -p $PORT"
 
-[build.args]
-NODE_ENV = { required = false, default = "production" }
-VITE_NETWORK_ID = { required = false, default = "1" }
-VITE_RPC_URL = { required = true }
-
-[build.environment]
+# Environment variables
+[variables]
 NODE_ENV = "production"
 
-[build.dockerfile]
-copy = [
-  ".nixpacks/",
-  "frontend/"
-]
+# Configure Nixpacks to properly handle the frontend directory
+[nixpacks]
+plan-path = "./frontend"
 
-[build.settings]
-memory = 1024
-cpu = 1
-
-[build.context]
-base = "/app"
+# Environment variables for build
+[env]
+NODE_ENV = "production"
+VITE_NETWORK_ID = { required = false, default = "1" }
