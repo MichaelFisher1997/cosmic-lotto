@@ -11,9 +11,10 @@ services:
       - NODE_ENV=development
       # Update these with your preferred network configuration
       - VITE_NETWORK_ID=1  # Mainnet by default
-      - VITE_RPC_URL=https://mainnet.infura.io/v3/YOUR-INFURA-KEY
+      # No need for RPC URL since we removed that requirement
     restart: unless-stopped
     volumes:
+      # For development mode only - comment these out for production
       - ./frontend:/app/frontend
       - /app/frontend/node_modules
     healthcheck:

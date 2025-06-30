@@ -1,32 +1,38 @@
-# Base image with Node.js and Bun
 [phases.setup]
-nixPkgs = ["nodejs-18_x", "bun"]
-aptPkgs = ["ca-certificates"]
+nixPkgs = ['nodejs-18_x', 'bun']
+commands = ["echo 'Setup complete'"]
 
-# Install dependencies
 [phases.install]
 cmds = [
-  "cd frontend && bun install",
-  "cd frontend && bun add -d @esbuild-plugins/node-globals-polyfill @esbuild-plugins/node-modules-polyfill rollup-plugin-node-polyfills"
+  "cd frontend",
+  "bun install --frozen-lockfile"
 ]
 
-# Build the application
 [phases.build]
-cmds = ["cd frontend && bunx node static-build.js"]
+cmds = [
+  "cd frontend",
+  "bun run build"
+]
 
-# Start command (for static hosting, use serve)
 [start]
-cmd = "cd frontend && bunx serve -s dist -p $PORT"
+cmd = "cd frontend && bun run dev -- --host 0.0.0.0 --port $PORT"
 
-# Environment variables
-[variables]
-NODE_ENV = "production"
-
-# Configure Nixpacks to properly handle the frontend directory
-[nixpacks]
-plan-path = "./frontend"
-
-# Environment variables for build
-[env]
-NODE_ENV = "production"
+[build.args]
+NODE_ENV = { required = false, default = "production" }
 VITE_NETWORK_ID = { required = false, default = "1" }
+VITE_RPC_URL = { required = true }
+
+[build.environment]
+NODE_ENV = "production"
+
+[build.dockerfile]
+copy = [
+  "frontend/package*.json",
+  "frontend/tsconfig*.json",
+  "frontend/",
+  "."
+]
+
+[build.settings]
+memory = 1024
+cpu = 1
