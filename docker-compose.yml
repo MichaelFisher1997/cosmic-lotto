@@ -3,11 +3,8 @@ version: '3.8'
 services:
   # Frontend service
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
-      args:
-        - NODE_ENV=production
+    image: ghcr.io/michaelfisher1997/cosmic-lotto/cosmic-lotto-frontend:main
+    pull_policy: always
     ports:
       - "80:3000"  # Map port 80 to the internal port 3000
     environment:
