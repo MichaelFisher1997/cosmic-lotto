@@ -1,21 +1,12 @@
 [phases.setup]
 nixPkgs = ['nodejs-18_x', 'bun']
-commands = ["echo 'Setup complete'"]
-
-[phases.install]
-cmds = [
-  "cd frontend",
-  "bun install --frozen-lockfile"
-]
-
-[phases.build]
-cmds = [
-  "cd frontend",
-  "bun run build"
+commands = [
+  "chmod +x /app/.nixpacks/build.sh",
+  "/app/.nixpacks/build.sh"
 ]
 
 [start]
-cmd = "cd frontend && bun run dev -- --host 0.0.0.0 --port $PORT"
+cmd = "cd /app/frontend && bun run dev -- --host 0.0.0.0 --port $PORT"
 
 [build.args]
 NODE_ENV = { required = false, default = "production" }
@@ -36,3 +27,6 @@ copy = [
 [build.settings]
 memory = 1024
 cpu = 1
+
+[build.context]
+base = "/app"
