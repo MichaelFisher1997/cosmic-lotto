@@ -1,11 +1,10 @@
-version: '3.8'
-
 services:
   # Frontend service
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
+    working_dir: /app/frontend
     ports:
       - "9090:9090"  # Map host port 9090 to container port 9090
     environment:
