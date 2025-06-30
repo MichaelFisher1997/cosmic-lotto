@@ -4,19 +4,21 @@ FROM oven/bun:1.2.12
 # Set working directory inside the container
 WORKDIR /app
 
-# Copy all files from your project directory into the container
-COPY . .
-
-# Move into frontend directory
-WORKDIR /app/frontend
+# Copy package files first for better caching
+COPY frontend/package*.json ./frontend/
 
 # Install dependencies
+WORKDIR /app/frontend
+RUN bun add -D @metamask/providers @types/node
 RUN bun install --frozen-lockfile
+
+# Copy the rest of the files
+COPY . .
 
 # Build your frontend
 RUN bun run build
 
-# Expose the app port (Vite default is 5173, but we'll use 9090 as in the example)
+# Expose the app port
 EXPOSE 9090
 
 # Start the Vite development server
