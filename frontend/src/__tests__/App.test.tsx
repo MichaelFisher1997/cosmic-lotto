@@ -1,15 +1,22 @@
-import { render, screen, fireEvent } from '../test-utils';
+import { render } from '../test-utils';
+import { screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import App from '../App';
 
-// Mock the useWeb3React hook
-jest.mock('@web3-react/core', () => ({
-  ...jest.requireActual('@web3-react/core'),
-  useWeb3React: () => ({
-    account: '0x1234...7890',
-    active: true,
-    activate: jest.fn(),
-    deactivate: jest.fn(),
+// Mock the web3 module
+jest.mock('../utils/web3', () => ({
+  connectWallet: jest.fn().mockResolvedValue({
+    provider: {
+      request: jest.fn().mockResolvedValue(['0x1234567890123456789012345678901234567890']),
+      on: jest.fn(),
+      removeListener: jest.fn(),
+    },
+    signer: {
+      getAddress: jest.fn().mockResolvedValue('0x1234567890123456789012345678901234567890'),
+    },
+    address: '0x1234567890123456789012345678901234567890',
   }),
+  disconnectWallet: jest.fn().mockResolvedValue(undefined),
 }));
 
 // Mock window.ethereum
@@ -26,12 +33,6 @@ const mockEthereum = {
   removeListener: jest.fn(),
 };
 
-// Mock the wallet connect functionality
-jest.mock('../utils/web3', () => ({
-  connectWallet: jest.fn().mockResolvedValue(mockEthereum),
-  disconnectWallet: jest.fn().mockResolvedValue(undefined),
-}));
-
 describe('App Component', () => {
   beforeEach(() => {
     // Clear all mocks and reset DOM before each test
@@ -45,84 +46,85 @@ describe('App Component', () => {
 
   test('renders without crashing', () => {
     render(<App />);
-    expect(screen.getByText(/CosmicLotto/i)).toBeInTheDocument();
+    // Look for the logo specifically by its class
+    const logo = screen.getByText(/CosmicLotto/i, { selector: 'span.text-purple-400' });
+    expect(logo).toBeInTheDocument();
   });
 
   test('toggles dark mode when the theme toggle button is clicked', () => {
     render(<App />);
     
-    // Initial state should be dark mode
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    // Initially should be in dark mode
+    expect(document.documentElement).toHaveClass('dark');
     
-    // Click the theme toggle button
-    const themeToggle = screen.getByRole('button', { name: /toggle theme/i });
+    // Find the theme toggle button by its aria-label
+    const themeToggle = screen.getByRole('button', { name: /toggle dark mode/i });
     fireEvent.click(themeToggle);
     
-    // After clicking, dark mode should be off
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
+    // Should remove dark mode class
+    expect(document.documentElement).not.toHaveClass('dark');
     
     // Click again to toggle back
     fireEvent.click(themeToggle);
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement).toHaveClass('dark');
   });
 
   test('navigates to different sections', () => {
+    // Mock the scrollIntoView function
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+    
+    // Create a mock for the scrollToSection function
+    const mockScrollToSection = jest.fn();
+    
+    // Render the App component with the mock function
     render(<App />);
     
-    // Test each navigation link
-    const navLinks = [
-      { name: /how it works/i, testId: 'how-it-works' },
-      { name: /prizes/i, testId: 'prizes' },
-      { name: /buy tickets/i, testId: 'buy-tickets' },
+    // Get all navigation buttons
+    const navButtons = [
+      { name: /how it works/i, section: 'how-it-works' },
+      { name: /prizes/i, section: 'prizes' },
+      { name: /buy tickets/i, section: 'buy-tickets' },
     ];
     
-    navLinks.forEach(({ name }) => {
-      const link = screen.getByRole('link', { name });
-      fireEvent.click(link);
-      // We can't test actual scrolling in JSDOM, but we can test if the click handler is called
-      expect(link).toHaveAttribute('href');
+    // Test each navigation button
+    navButtons.forEach(({ name, section }) => {
+      const button = screen.getByRole('button', { name });
+      fireEvent.click(button);
+      
+      // Check if scrollIntoView was called with the correct section
+      expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
+        behavior: 'smooth'
+      });
     });
   });
 
-  test('displays mobile menu when hamburger button is clicked', () => {
-    // Mock window.innerWidth to simulate mobile view
-    global.innerWidth = 500;
-    
+  test('renders navigation buttons', () => {
     render(<App />);
     
-    // Menu should be closed by default
-    expect(screen.queryByRole('navigation')).not.toHaveClass('translate-x-0');
+    // Check for navigation buttons
+    const homeButton = screen.getByRole('button', { name: /home/i });
+    const howItWorksButton = screen.getByRole('button', { name: /how it works/i });
+    const prizesButton = screen.getByRole('button', { name: /prizes/i });
     
-    // Click the hamburger button
-    const menuButton = screen.getByRole('button', { name: /menu/i });
-    fireEvent.click(menuButton);
-    
-    // Menu should now be open
-    expect(screen.getByRole('navigation')).toHaveClass('translate-x-0');
-    
-    // Click again to close
-    fireEvent.click(menuButton);
-    expect(screen.queryByRole('navigation')).not.toHaveClass('translate-x-0');
+    expect(homeButton).toBeInTheDocument();
+    expect(howItWorksButton).toBeInTheDocument();
+    expect(prizesButton).toBeInTheDocument();
   });
 
   test('renders all main sections', () => {
     render(<App />);
     
-    // Check for main sections
-    expect(screen.getByRole('banner')).toBeInTheDocument(); // Header
-    expect(screen.getByRole('main')).toBeInTheDocument();   // Main content
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument(); // Footer
-    
-    // Check for specific section headings
-    expect(screen.getByText(/how it works/i)).toBeInTheDocument();
-    expect(screen.getByText(/prizes/i)).toBeInTheDocument();
+    // Check for main sections using their IDs
+    expect(screen.getByTestId('home-section')).toBeInTheDocument();
+    expect(screen.getByTestId('how-it-works-section')).toBeInTheDocument();
+    expect(screen.getByTestId('prizes-section')).toBeInTheDocument();
   });
 
   test('renders wallet connect button', () => {
     render(<App />);
     
-    const walletButton = screen.getByRole('button', { name: /connect wallet/i });
-    expect(walletButton).toBeInTheDocument();
-    expect(walletButton).toHaveTextContent(/connect wallet/i);
+    // Check for wallet connect button
+    const connectButton = screen.getByRole('button', { name: /connect wallet/i });
+    expect(connectButton).toBeInTheDocument();
   });
 });

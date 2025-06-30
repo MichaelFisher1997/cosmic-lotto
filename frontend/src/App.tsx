@@ -154,7 +154,7 @@ function App() {
       </header>
 
       {/* Hero Section */}
-      <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden pt-16 pb-20 px-4">
+      <section id="home" data-testid="home-section" className="min-h-screen flex items-center justify-center relative overflow-hidden pt-16 pb-20 px-4">
         <div className="absolute inset-0 bg-radial-gradient opacity-20"></div>
         <div className="max-w-4xl mx-auto text-center relative z-10 px-4">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
@@ -182,7 +182,7 @@ function App() {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-20 px-4">
+      <section id="how-it-works" data-testid="how-it-works-section" className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-16 relative inline-block left-1/2 transform -translate-x-1/2">
             How It Works
@@ -219,7 +219,7 @@ function App() {
       </section>
 
       {/* Prizes Section */}
-      <section id="prizes" className="py-20 px-4 bg-gradient-to-b from-gray-900 to-black">
+      <section id="prizes" data-testid="prizes-section" className="py-20 px-4 bg-gradient-to-b from-gray-900 to-black">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-16 relative inline-block left-1/2 transform -translate-x-1/2">
             Win Amazing Prizes

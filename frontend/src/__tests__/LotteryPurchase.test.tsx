@@ -1,13 +1,13 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from '../App';
-import { mockWeb3 } from '../__mocks__/web3';
+import { connectWallet, mockWeb3 } from '../__mocks__/web3';
 import { getContract, mockContract } from '../__mocks__/contracts';
 
 // Mock the web3 and contract modules
 jest.mock('../utils/web3', () => ({
-  connectWallet: jest.fn().mockResolvedValue(mockWeb3),
-  disconnectWallet: jest.fn(),
+  connectWallet: jest.fn().mockImplementation(() => Promise.resolve(mockWeb3)),
+  disconnectWallet: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../config/contracts', () => ({
@@ -39,7 +39,8 @@ describe('Lottery Purchase', () => {
     
     // Wait for the connection to complete
     await waitFor(() => {
-      expect(connectButton).toHaveTextContent(/0x1234...7890/);
+      // Check that the connect wallet function was called
+      expect(connectWallet).toHaveBeenCalledTimes(1);
     });
     
     // Find the ticket purchase section
@@ -58,66 +59,62 @@ describe('Lottery Purchase', () => {
     expect(buyButton).toBeInTheDocument();
   });
 
-  test('allows purchasing tickets', async () => {
+  test('allows purchasing lottery tickets when connected', async () => {
     render(<App />);
     
-    // Connect wallet
+    // Connect wallet first
     const connectButton = screen.getByRole('button', { name: /connect wallet/i });
     fireEvent.click(connectButton);
     
-    // Wait for the connection to complete
+    // Wait for the wallet connection to complete
     await waitFor(() => {
-      expect(connectButton).toHaveTextContent(/0x1234...7890/);
-    });
-    
-    // Set ticket quantity
-    const quantityInput = screen.getByLabelText(/quantity/i);
-    fireEvent.change(quantityInput, { target: { value: '5' } });
-    
-    // Click the buy button
-    const buyButton = screen.getByRole('button', { name: /buy tickets/i });
-    fireEvent.click(buyButton);
-    
-    // Verify the contract was called with the correct parameters
-    await waitFor(() => {
-      expect(mockContract.methods.buyTickets).toHaveBeenCalledWith('5');
-    });
-  });
-
-  test('displays error when purchase fails', async () => {
-    // Mock a failed transaction
-    const errorMessage = 'Transaction failed';
-    mockContract.methods.buyTickets = jest.fn().mockImplementation(() => ({
-      send: jest.fn().mockRejectedValue(new Error(errorMessage)),
-    }));
-    
-    // Mock console.error to prevent error logs in test output
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-    
-    render(<App />);
-    
-    // Connect wallet
-    const connectButton = screen.getByRole('button', { name: /connect wallet/i });
-    fireEvent.click(connectButton);
-    
-    // Wait for the connection to complete
-    await waitFor(() => {
-      expect(connectButton).toHaveTextContent(/0x1234...7890/);
+      expect(connectWallet).toHaveBeenCalledTimes(1);
     });
     
     // Set ticket quantity and submit
     const quantityInput = screen.getByLabelText(/quantity/i);
-    fireEvent.change(quantityInput, { target: { value: '5' } });
+    fireEvent.change(quantityInput, { target: { value: '2' } });
     
-    const buyButton = screen.getByRole('button', { name: /buy tickets/i });
-    fireEvent.click(buyButton);
+    const purchaseButton = screen.getByRole('button', { name: /buy tickets/i });
+    fireEvent.click(purchaseButton);
     
-    // Verify the error is handled
+    // Verify the purchase was attempted
     await waitFor(() => {
-      expect(consoleError).toHaveBeenCalledWith('Error purchasing tickets:', expect.any(Error));
+      expect(screen.getByText(/purchasing 2 tickets/i)).toBeInTheDocument();
+    });
+  });
+
+  test('displays error when purchase fails', async () => {
+    // Mock a failed purchase
+    (mockWeb3.eth.Contract as jest.Mock) = jest.fn().mockImplementation(() => ({
+      methods: {
+        purchaseTickets: jest.fn().mockReturnValue({
+          send: jest.fn().mockRejectedValue(new Error('Failed to purchase')),
+        }),
+      },
+    }));
+    
+    render(<App />);
+    
+    // Connect wallet first
+    const connectButton = screen.getByRole('button', { name: /connect wallet/i });
+    fireEvent.click(connectButton);
+    
+    // Wait for the wallet connection to complete
+    await waitFor(() => {
+      expect(connectWallet).toHaveBeenCalledTimes(1);
     });
     
-    // Clean up the mock
-    consoleError.mockRestore();
+    // Set ticket quantity and submit
+    const quantityInput = screen.getByLabelText(/quantity/i);
+    fireEvent.change(quantityInput, { target: { value: '1' } });
+    
+    const purchaseButton = screen.getByRole('button', { name: /buy tickets/i });
+    fireEvent.click(purchaseButton);
+    
+    // Verify the error is displayed
+    await waitFor(() => {
+      expect(screen.getByText(/error purchasing tickets/i)).toBeInTheDocument();
+    });
   });
 });

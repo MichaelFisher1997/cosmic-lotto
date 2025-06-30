@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from '../App';
-import { connectWallet, mockWeb3 } from '../__mocks__/web3';
+import { connectWallet, mockWeb3, isWalletConnected, getMockAccount } from '../__mocks__/web3';
 
 // Mock the web3 module
 jest.mock('../utils/web3', () => ({
@@ -9,10 +9,27 @@ jest.mock('../utils/web3', () => ({
   disconnectWallet: jest.fn(),
 }));
 
+// Mock the App component's dependencies
+jest.mock('../components/Web3Provider', () => ({
+  useWeb3: () => ({
+    connect: connectWallet,
+    disconnect: jest.fn(),
+    isConnected: isWalletConnected(),
+    account: isWalletConnected() ? getMockAccount() : null,
+  }),
+}));
+
 describe('Wallet Connection', () => {
   beforeEach(() => {
-    // Clear all mocks before each test
+    // Clear all mocks and reset state before each test
     jest.clearAllMocks();
+    // Reset the mock wallet connection state
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // Restore console.error
+    (console.error as jest.Mock).mockRestore();
   });
 
   test('connects wallet when connect button is clicked', async () => {
@@ -30,8 +47,9 @@ describe('Wallet Connection', () => {
       expect(connectWallet).toHaveBeenCalledTimes(1);
     });
     
-    // Verify the button text changes to the connected address (shortened)
-    expect(connectButton).toHaveTextContent(/0x1234...7890/);
+    // The button should now show the connected address
+    const updatedButton = await screen.findByText(/0x1234...7890/);
+    expect(updatedButton).toBeInTheDocument();
   });
 
   test('displays error when wallet connection fails', async () => {
@@ -39,25 +57,19 @@ describe('Wallet Connection', () => {
     const errorMessage = 'Failed to connect to wallet';
     (connectWallet as jest.Mock).mockRejectedValueOnce(new Error(errorMessage));
     
-    // Mock console.error to prevent error logs in test output
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-    
     render(<App />);
     
     // Find and click the connect wallet button
     const connectButton = screen.getByRole('button', { name: /connect wallet/i });
     fireEvent.click(connectButton);
     
-    // Wait for the error to be handled
+    // Wait for the error state to be handled
     await waitFor(() => {
       expect(connectWallet).toHaveBeenCalledTimes(1);
     });
     
-    // Verify the button text remains the same
+    // The button should still be in the connect state
     expect(connectButton).toHaveTextContent(/connect wallet/i);
-    
-    // Clean up the mock
-    consoleError.mockRestore();
   });
 
   test('disconnects wallet when disconnect is clicked', async () => {
