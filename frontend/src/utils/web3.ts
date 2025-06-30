@@ -1,6 +1,32 @@
 import { ethers } from 'ethers';
 import { InjectedConnector } from '@web3-react/injected-connector';
 
+// Create a wrapper that matches the expected ExternalProvider interface
+const getEthereumProvider = () => {
+  if (!window.ethereum) {
+    throw new Error('MetaMask is not installed');
+  }
+  
+  return {
+    isMetaMask: window.ethereum.isMetaMask,
+    request: (request: { method: string; params?: any[] }) => 
+      window.ethereum.request(request),
+    sendAsync: (request: { method: string; params?: any[] }, callback: (error: any, response: any) => void) => {
+      window.ethereum.request(request)
+        .then((result: any) => callback(null, { result }))
+        .catch((error: any) => callback(error, null));
+    },
+    on: (event: string, callback: (...args: any[]) => void) => {
+      window.ethereum.on(event, callback);
+    },
+    removeListener: (event: string, callback: (...args: any[]) => void) => {
+      window.ethereum.removeListener(event, callback);
+    },
+    isConnected: () => window.ethereum.isConnected(),
+    chainId: window.ethereum.chainId
+  };
+};
+
 export const injected = new InjectedConnector({
   supportedChainIds: [1287], // Moonbase Alpha
 });
@@ -15,9 +41,9 @@ export const connectWallet = async () => {
   }
   
   try {
-    // Create a Web3Provider instance with type assertion
+    // Create a Web3Provider instance with our wrapped provider
     const provider = new ethers.providers.Web3Provider(
-      window.ethereum as ethers.providers.ExternalProvider,
+      getEthereumProvider(),
       'any' // Enable network auto-detection
     );
     
