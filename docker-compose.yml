@@ -4,12 +4,10 @@ services:
   # Frontend service
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
-      args:
-        - NODE_ENV=production
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "80:3000"  # Map port 80 to the internal port 3000
+      - "80:80"
     environment:
       - NODE_ENV=production
       # Update these with your preferred network configuration
@@ -23,7 +21,7 @@ services:
         max_attempts: 5
         window: 120s
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3
