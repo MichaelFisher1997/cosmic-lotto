@@ -84,7 +84,10 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 text-white">
+    <div 
+      data-testid="app-container"
+      className={`min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 text-white ${darkMode ? 'dark' : ''}`}
+    >
       {/* Animated Stars Background */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         {stars.map(star => (
