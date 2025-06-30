@@ -4,21 +4,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - FRONTEND_PORT=${FRONTEND_PORT}
     working_dir: /app/frontend
     ports:
-      - "9090:9090"  # Map host port 9090 to container port 9090
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"  # Use port from .env file
     environment:
       - NODE_ENV=development
-      # Update these with your preferred network configuration
-      - VITE_NETWORK_ID=1  # Mainnet by default
-      # No need for RPC URL since we removed that requirement
+      - VITE_NETWORK_ID=${VITE_NETWORK_ID}  # Use network ID from .env file
+      - FRONTEND_PORT=${FRONTEND_PORT}  # Pass port to container
     restart: unless-stopped
     volumes:
       # For development mode only - comment these out for production
       - ./frontend:/app/frontend
       - /app/frontend/node_modules
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:${FRONTEND_PORT}"]
       interval: 30s
       timeout: 10s
       retries: 3

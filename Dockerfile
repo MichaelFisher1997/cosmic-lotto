@@ -28,8 +28,11 @@ RUN if [ ! -f "index.html" ]; then echo '<!DOCTYPE html>\n<html lang="en">\n<hea
 # Skip TypeScript type checking and build directly with Vite
 RUN NODE_OPTIONS=--max-old-space-size=4096 bunx vite build --config vite.simple.config.js || echo "Building static version instead" && mkdir -p dist && echo '<!DOCTYPE html><html><head><title>Decentralized Lotto Game</title><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px;}</style></head><body><h1>Decentralized Lotto Game</h1><p>Welcome to our NFT-based lottery platform.</p><p>Features coming soon:</p><ul><li>MetaMask wallet integration</li><li>NFT-based lottery tickets (ERC-721)</li><li>Smart contract for lottery logic</li><li>Automatic winner selection</li><li>Prize distribution</li></ul></body></html>' > dist/index.html
 
-# Expose the app port
-EXPOSE 9090
+# Accept frontend port as build argument with default
+ARG FRONTEND_PORT=9090
 
-# For development mode
-CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0", "--port", "9090"]
+# Expose the app port
+EXPOSE ${FRONTEND_PORT}
+
+# For development mode - use environment variable for port
+CMD ["sh", "-c", "bun run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT:-9090}"]
