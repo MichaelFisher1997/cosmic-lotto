@@ -31,9 +31,6 @@ jobs:
         working-directory: ./frontend
         run: npm ci
         
-      - name: Install root dependencies
-        run: npm install
-        
       - name: Run tests
         run: node run-tests.js
         
@@ -42,8 +39,8 @@ jobs:
         run: npx jest --coverage --watchAll=false
         
       - name: Upload test coverage
+        if: always() && !env.ACT
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: test-coverage
           path: frontend/coverage/
