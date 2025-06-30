@@ -31,9 +31,15 @@ jobs:
         working-directory: ./frontend
         run: npm ci
         
+      - name: Install root dependencies
+        run: npm install
+        
       - name: Run tests
+        run: node run-tests.js
+        
+      - name: Generate coverage report
         working-directory: ./frontend
-        run: npm test -- --coverage --watchAll=false
+        run: npx jest --coverage --watchAll=false
         
       - name: Upload test coverage
         uses: actions/upload-artifact@v4
