@@ -73,21 +73,18 @@ describe('App Component', () => {
     // Mock the scrollIntoView function
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
     
-    // Create a mock for the scrollToSection function
-    const mockScrollToSection = jest.fn();
-    
-    // Render the App component with the mock function
+    // Render the App component
     render(<App />);
     
     // Get all navigation buttons
     const navButtons = [
-      { name: /how it works/i, section: 'how-it-works' },
-      { name: /prizes/i, section: 'prizes' },
-      { name: /buy tickets/i, section: 'buy-tickets' },
+      { name: /how it works/i },
+      { name: /prizes/i },
+      { name: /buy tickets/i },
     ];
     
     // Test each navigation button
-    navButtons.forEach(({ name, section }) => {
+    navButtons.forEach(({ name }) => {
       const button = screen.getByRole('button', { name });
       fireEvent.click(button);
       

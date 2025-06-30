@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { FaSun, FaMoon, FaRocket, FaWallet, FaTwitter, FaTelegram, FaGithub } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaSun, FaMoon, FaRocket, FaTwitter, FaTelegram, FaGithub } from 'react-icons/fa';
 
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [, setIsMenuOpen] = useState(false);
   const [stars, setStars] = useState<Array<{id: number, x: number, y: number, size: number, opacity: number}>>([]);
 
   // Add global styles
