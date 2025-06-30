@@ -1,22 +1,27 @@
-# Use the official Node.js image
-FROM node:20-alpine
+# Use the official Bun image
+FROM oven/bun:1.2.12
 
-# Set working directory
-WORKDIR /app
+# Set working directory to frontend
+WORKDIR /app/frontend
 
-# Create a simple HTTP server
-RUN echo "const http = require('http');\
-const server = http.createServer((req, res) => {\
-  res.statusCode = 200;\
-  res.setHeader('Content-Type', 'text/plain');\
-  res.end('Hello, World!\\n');\
-});\
-server.listen(3000, '0.0.0.0', () => {\
-  console.log('Server running at http://localhost:3000/');\
-});" > server.js
+# Copy package files first for better caching
+COPY frontend/package*.json ./
 
-# Expose the port the app runs on
-EXPOSE 3000
+# Copy root config files
+COPY frontend/tsconfig*.json ./
 
-# Start the server
-CMD ["node", "server.js"]
+# Install dependencies
+RUN bun add -D @metamask/providers @types/node
+RUN bun install --frozen-lockfile
+
+# Copy the rest of the frontend files
+COPY frontend/ .
+
+# Build your frontend
+RUN bun run build
+
+# Expose the app port
+EXPOSE 9090
+
+# Start the Vite development server
+CMD ["bun", "run", "dev", "--", "--host", "0.0.0.0", "--port", "9090"]
