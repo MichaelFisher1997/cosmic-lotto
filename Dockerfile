@@ -22,14 +22,11 @@ COPY frontend/ .
 # Create a simplified Vite config file
 RUN echo "import { defineConfig } from 'vite';\nimport react from '@vitejs/plugin-react';\nimport { resolve } from 'path';\n\nexport default defineConfig({\n  base: '/',\n  plugins: [\n    react({\n      jsxImportSource: '@emotion/react',\n      babel: {\n        plugins: ['@emotion/babel-plugin'],\n      },\n    }),\n  ],\n  resolve: {\n    alias: {\n      '@': resolve(__dirname, 'src'),\n    },\n  },\n  build: {\n    outDir: 'dist',\n    assetsDir: 'assets',\n    sourcemap: true,\n  },\n  define: {\n    'process.env': {},\n    global: 'globalThis',\n  },\n});" > vite.simple.config.js
 
-# Create a simple index.html if needed
-RUN if [ ! -f "index.html" ]; then echo '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Decentralized Lotto Game</title>\n</head>\n<body>\n  <div id="root"></div>\n  <script type="module" src="/src/main.tsx"></script>\n</body>\n</html>' > index.html; fi
-
 # Skip TypeScript type checking and build directly with Vite
 RUN NODE_OPTIONS=--max-old-space-size=4096 bunx vite build --config vite.simple.config.js || echo "Building static version instead" && mkdir -p dist && echo '<!DOCTYPE html><html><head><title>Decentralized Lotto Game</title><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px;}</style></head><body><h1>Decentralized Lotto Game</h1><p>Welcome to our NFT-based lottery platform.</p><p>Features coming soon:</p><ul><li>MetaMask wallet integration</li><li>NFT-based lottery tickets (ERC-721)</li><li>Smart contract for lottery logic</li><li>Automatic winner selection</li><li>Prize distribution</li></ul></body></html>' > dist/index.html
 
 # Accept frontend port as build argument with default
-ARG FRONTEND_PORT=9090
+ARG FRONTEND_PORT=${FRONTEND_PORT}
 
 # Expose the app port
 EXPOSE ${FRONTEND_PORT}
