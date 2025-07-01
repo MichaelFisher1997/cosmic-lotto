@@ -34,5 +34,8 @@ ARG FRONTEND_PORT=9090
 # Expose the app port
 EXPOSE ${FRONTEND_PORT}
 
-# For development mode - use environment variable for port
-CMD ["sh", "-c", "bun run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT:-9090}"]
+# Install a simple HTTP server for serving static files in production
+RUN bun add -g serve
+
+# For production, serve the static files from the dist directory
+CMD ["sh", "-c", "serve -s dist -l ${FRONTEND_PORT:-9090}"]
